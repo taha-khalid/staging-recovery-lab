@@ -1,0 +1,20 @@
+FROM python:3.14.8-alpine
+
+ENV PYTHONDONTWRITEBYTECODE 1 \
+    PYTHONUNBUFFERED 1
+
+WORKDIR /tests
+
+# Only the dependencies used by HTTP integration tests
+COPY requirements-test.txt .
+RUN pip install --no-cache-dir --no-compile -r requirements-test.txt
+
+# Run the application as a non-root user
+RUN adduser --disabled-password testuser
+
+COPY --chown=testuser:testuser tests/* ./tests/
+
+# Switch to the non-root user
+USER testuser
+
+CMD ["python", "-m", "pytest", "tests/", "-v", "-p", "no:cacheprovider"]

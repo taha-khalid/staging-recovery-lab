@@ -28,13 +28,13 @@ async def ready_check():
             
     except TimeoutError:
         raise HTTPException(
-            status_code=500,
+            status_code=503,
             detail="Database health check timed out",
         )
     
     except Exception:
         raise HTTPException(
-            status_code=500,
+            status_code=503,
             detail="Database is unavailable",
         )   
     
@@ -91,27 +91,28 @@ def read_items():
     return {"items": items}
 
 @app.get("/items/{item_id}")
-async def read_item(item_id: int):
+def read_item(item_id: int):
     try:
         with engine.connect() as connection:
             item = connection.execute(
                 text("""
-                     SELECT name
+                     SELECT id, name, created_at
                      FROM items 
                      WHERE id = :item_id
                      """),
                 {"item_id": item_id},
             ).mappings().first()
             
-            if item is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail="Item not found",
-                )
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch item: {str(e)}",
         )
+    
+    if item is None:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="Item not found",
+                    )
 
     return dict(item)
