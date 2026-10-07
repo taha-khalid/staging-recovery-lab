@@ -1,10 +1,13 @@
 services:
   api:
-    build: .
+    image: staging-recovery-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:  
-      - "8000:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     networks:
       - staging-lab
     depends_on:
@@ -30,7 +33,25 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-  
+
+  tests:
+    image: staging-recovery-tests:local
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    profiles:
+      - test
+    environment:
+      API_BASE_URL: http://api:8000
+      TEST_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+    networks:
+        - staging-lab
+    depends_on:
+      api:
+        condition: service_started
+      db: 
+        condition: service_healthy
+
 volumes:
   postgres_data:
   
