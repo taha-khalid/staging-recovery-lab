@@ -164,6 +164,26 @@ jobs:
                 )
                 PY
             
+            - name: Export tested images
+              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+              run: |
+                mkdir -p image-artifacts
+
+                docker image save \
+                --output image-artifacts/tested-images.tar \
+                staging-recovery-api:latest \
+                staging-recovery-tests:local
+            
+            - name: Upload tested images
+              if: github.event_name == 'push' && github.ref =='refs/heads/main'
+              uses: actions/upload-artifact@v4
+              with:
+                name: tested-images
+                path: image-artifacts/tested-images.tar
+                compression-level: 0
+                retention-days: 1
+                if-no-files-found: error
+            
             - name: Collect test report and container logs
               if: always()
               run: |
@@ -198,3 +218,66 @@ jobs:
                 docker compose --env-file /dev/null down \
                     --volumes \
                     --remove-orphans
+    
+    publish:
+        name: Publish tested images
+        needs: Integration
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+
+        permissions:
+            contents: read
+            packages: write
+        
+        defaults:
+            run:
+                shell: bash
+        
+        steps:
+            - name: Download tested images
+              uses: actions/download-artifact@v4
+              with:
+                name: tested-images
+                path: image-artifacts
+            
+            - name: Load tested images
+              run: |
+                docker image load \
+                  --input image-artifacts/tested-images.tar
+            
+            - name: Authenticate to GHCR
+              env:
+                GHCR_TOKEN: ${{secrets.GITHUB_TOKEN}}
+              
+              run: |
+                printf '%s' "$GHCR_TOKEN" |
+                    docker login ghcr.io \
+                      --username "$GITHUB_ACTOR" \
+                      --password-stdin
+            
+            - name: Tag and publish images
+              run: |
+                namespace="${GITHUB_REPOSITORY_OWNERc,,}"
+                tag="sha-${GITHUB_SHA}"
+
+                api_image="ghcr.io/${namespace}/staging-recovery-api"
+                tests_image="ghcr.io/${namespace}/staging-recovery-tests"
+
+                docker tag staging-recovery-api:latest "${api_image}:${tag}"
+                docker tag staging-recovery-tests:local "${tests_image}:${tag}"
+
+                docker push "${api_image}:${tag}"
+                docker push "${tests_image}:${tag}"
+
+                {
+                    echo "### Published images"
+                    echo
+                    echo "- API: \`${api_image}:${tag}\`"
+                    echo "- Tests: \`${tests_image}:${tag}\`"
+                } >> "$GITHUB_STEP_SUMMARY"
+
+            - name: Log out of GHCR
+              if: always()
+              run: docker logout ghcr.io
