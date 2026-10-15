@@ -73,6 +73,39 @@ jobs:
                     -v \
                     -p no:cacheprovider \
                     --junitxml=/tmp/results.xml
+
+            - name: Verify backup and restoration
+              run: |
+                docker compose --env-file /dev/null stop api
+
+                python3 scripts/verify_recovery.py \
+                    --env-file /dev/null \
+                    --project "$COMPOSE_PROJECT_NAME"
+                
+                docker compose --env-file /dev/null start api
+
+                python3 - <<'PY'
+                import os 
+                import time 
+                import urllib.error
+                import urllib.request
+
+                url = f"http://127.0.0.1:{os.environ['API_PORT']}/ready"
+                deadline = time.monotonic() + 30
+
+                while time.monotonic() < deadline:
+                    try:
+                        with urllib.request.urlopen(url, timeout=2) as response:
+                            if response.status == 200:
+                                break
+                    except (urllib.error.URLError, TimeoutError):
+                        pass
+                    time.sleep(1)
+                
+                else:
+                    raise SystemExit("API did not recover after restart")
+                
+                PY
             
             - name: Verify database outage behavior
               run: |
