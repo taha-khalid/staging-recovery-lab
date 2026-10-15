@@ -96,7 +96,7 @@ jobs:
                     except urllib.error.HTTPError as exc:
                         return exc.code
                 
-                health_status =  get_status("\health", timeout=3)
+                health_status =  get_status("/health", timeout=3)
                 assert health_status == 200, (
                     f"/health returned {health_status}; expected 200"
                 )
