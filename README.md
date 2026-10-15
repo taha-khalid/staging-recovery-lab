@@ -1,2 +1,6 @@
-# staging-recovery-lab
-The repo is for managing the code for staging recovery drills to ensure readiness in case of an unforseen situation.
+## Automated verification
+
+GitHub Actions runs containerized integration tests, verifies PostgreSQL
+backup and restoration, and checks API behavior during a database outage.
+
+Test reports and container logs are available as workflow artifacts.
