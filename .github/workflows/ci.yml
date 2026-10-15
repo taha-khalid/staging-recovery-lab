@@ -259,7 +259,7 @@ jobs:
             
             - name: Tag and publish images
               run: |
-                namespace="${GITHUB_REPOSITORY_OWNERc,,}"
+                namespace="${GITHUB_REPOSITORY_OWNER,,}"
                 tag="sha-${GITHUB_SHA}"
 
                 api_image="ghcr.io/${namespace}/staging-recovery-api"
