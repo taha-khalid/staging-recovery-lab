@@ -109,7 +109,7 @@ jobs:
                     f"/ready returned {ready_status}; expected 503"
                 )
                 assert elapsed < 7, (
-                    f"/ready took {elapsed:.2f}s; expected under 7s
+                    f"/ready took {elapsed:.2f}s; expected under 7s"
                 )
                 
                 print(
