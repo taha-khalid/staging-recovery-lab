@@ -108,7 +108,7 @@ jobs:
                       urllib.error.URLError, 
                       OSError, 
                       http.client.HTTPException
-                      ) as exec:
+                      ) as exc:
                         last_error = f"{type(exc).__name__}: {exc}"
                     
                     time.sleep(1)
