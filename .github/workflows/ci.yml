@@ -2,9 +2,9 @@ name: CI
 
 on:
     pull_request:
-        push:
-            branches:
-                - main
+    push:
+        branches:
+            - main
     workflow_dispatch:
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
         
         env:
             COMPOSE_FILE: compose.yaml
-            COMPOSE_PROFILE: test
+            COMPOSE_PROFILES: test
             COMPOSE_PROJECT_NAME: ci-${{github.run_id}}-${{github.run_attempt}}
             TEST_CONTAINER: tests-${{github.run_id}}-${{github.run_attempt}}
 
@@ -59,7 +59,7 @@ jobs:
                   -d \
                   --no-build \
                   --wait \
-                  --wait-timeout 90\
+                  --wait-timeout 90 \
                   api db
             
             - name: Run integration tests
@@ -176,7 +176,7 @@ jobs:
                 fi
 
                 docker compose --env-file /dev/null logs \
-                  --no-color --timestamps
+                  --no-color --timestamps \
                   > reports/compose.log 2>&1 || true
                 
                 docker compose --env-file /dev/null ps -a \
@@ -196,5 +196,5 @@ jobs:
               run: |
                 docker rm -f "$TEST_CONTAINER" || true
                 docker compose --env-file /dev/null down \
-                    -- volumes \
+                    --volumes \
                     --remove-orphans
