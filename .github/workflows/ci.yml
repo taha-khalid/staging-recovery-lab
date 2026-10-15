@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
     integration:
-        name: Integraton tests
+        name: Integration tests
         runs-on: ubuntu-24.04
         timeout-minutes: 15
 
