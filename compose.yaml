@@ -1,6 +1,6 @@
 services:
   api:
-    image: staging-recovery-api:latest
+    image: ${API_IMAGE:-staging-recovery-api:latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -34,7 +34,7 @@ services:
       start_period: 10s
 
   tests:
-    image: staging-recovery-tests:local
+    image: ${TEST_IMAGE:-staging-recovery-tests:local}
     build:
       context: .
       dockerfile: Dockerfile.tests
